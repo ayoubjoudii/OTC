@@ -3,6 +3,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const { initializeDatabase } = require('./config/database');
 const { PORT } = require('./config/constants');
@@ -15,6 +16,24 @@ const favoriteRoutes = require('./routes/favoriteRoutes');
 
 // Initialize express app
 const app = express();
+
+// Rate limiting configuration
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: { error: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit each IP to 20 auth requests per windowMs
+    message: { error: 'Too many authentication attempts, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // Security middleware
 app.use(helmet({
@@ -44,11 +63,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/artworks', artworkRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/favorites', favoriteRoutes);
+// Apply rate limiting to API routes
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/artworks', apiLimiter, artworkRoutes);
+app.use('/api/categories', apiLimiter, categoryRoutes);
+app.use('/api/favorites', apiLimiter, favoriteRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -56,7 +75,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve index.html for root and all non-API routes (SPA support)
-app.get('*', (req, res) => {
+// Rate limited to prevent abuse
+app.get('*', apiLimiter, (req, res) => {
     if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     } else {

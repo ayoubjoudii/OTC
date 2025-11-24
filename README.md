@@ -158,6 +158,7 @@ npm test
 - CORS configuration
 - File type validation for uploads
 - Role-based access control
+- Rate limiting (100 requests/15min for API, 20 requests/15min for auth)
 
 ## License
 
