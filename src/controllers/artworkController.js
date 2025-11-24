@@ -4,6 +4,28 @@ const path = require('path');
 const { db } = require('../config/database');
 const { UPLOAD_DIR } = require('../config/constants');
 
+// Safe file deletion - validates path is within upload directory
+const safeDeleteFile = (imageUrl) => {
+    if (!imageUrl) return;
+    
+    // Extract just the filename from the URL path
+    const filename = path.basename(imageUrl);
+    
+    // Only allow deletion from the upload directory
+    const uploadDir = path.resolve(__dirname, '..', 'public', UPLOAD_DIR);
+    const filePath = path.resolve(uploadDir, filename);
+    
+    // Verify the resolved path is within the upload directory
+    if (!filePath.startsWith(uploadDir + path.sep)) {
+        console.warn('Attempted path traversal attack detected');
+        return;
+    }
+    
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+};
+
 // Get all artworks with optional filtering
 const getAllArtworks = (req, res) => {
     try {
@@ -224,11 +246,8 @@ const updateArtwork = (req, res) => {
 
         // Handle image update
         if (req.file) {
-            // Delete old image
-            const oldImagePath = path.join(__dirname, '..', 'public', artwork.image_url);
-            if (fs.existsSync(oldImagePath)) {
-                fs.unlinkSync(oldImagePath);
-            }
+            // Safely delete old image
+            safeDeleteFile(artwork.image_url);
             
             const imageUrl = `/${UPLOAD_DIR}/${req.file.filename}`;
             updates.push('image_url = ?');
@@ -277,11 +296,8 @@ const deleteArtwork = (req, res) => {
             return res.status(403).json({ error: 'You can only delete your own artworks.' });
         }
 
-        // Delete image file
-        const imagePath = path.join(__dirname, '..', 'public', artwork.image_url);
-        if (fs.existsSync(imagePath)) {
-            fs.unlinkSync(imagePath);
-        }
+        // Safely delete image file
+        safeDeleteFile(artwork.image_url);
 
         db.prepare('DELETE FROM artworks WHERE id = ?').run(id);
 

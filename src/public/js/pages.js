@@ -55,7 +55,7 @@ const Pages = {
                         </div>
                         <div class="artwork-grid">
                             ${categories.map(cat => `
-                                <div class="artist-card" onclick="App.navigateTo('gallery', {category: '${cat.id}'})">
+                                <div class="artist-card" data-action="navigate-gallery" data-category="${this.escapeAttr(cat.id)}">
                                     <div class="artist-avatar">
                                         <i class="fas fa-folder"></i>
                                     </div>
@@ -215,10 +215,10 @@ const Pages = {
                     ${artists.length > 0 ? `
                         <div class="artist-grid">
                             ${artists.map(artist => `
-                                <div class="artist-card" onclick="App.navigateTo('gallery', {artist: '${artist.id}'})">
+                                <div class="artist-card" data-action="navigate-gallery" data-artist="${this.escapeAttr(artist.id)}">
                                     <div class="artist-avatar">
                                         ${artist.profile_image ? 
-                                            `<img src="${artist.profile_image}" alt="${this.escapeHtml(artist.username)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` :
+                                            `<img src="${this.escapeHtml(artist.profile_image)}" alt="${this.escapeHtml(artist.username)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` :
                                             `<i class="fas fa-user"></i>`
                                         }
                                     </div>
@@ -479,10 +479,10 @@ const Pages = {
                                                 </span>
                                             </td>
                                             <td class="table-actions">
-                                                <button onclick="Pages.showArtworkModal('${artwork.id}')" title="Edit">
+                                                <button data-action="edit-artwork" data-artwork-id="${this.escapeAttr(artwork.id)}" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="delete" onclick="Pages.deleteArtwork('${artwork.id}')" title="Delete">
+                                                <button class="delete" data-action="delete-artwork" data-artwork-id="${this.escapeAttr(artwork.id)}" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -568,10 +568,10 @@ const Pages = {
                                                 <td>${cat.description ? this.escapeHtml(cat.description.substring(0, 50)) + (cat.description.length > 50 ? '...' : '') : '-'}</td>
                                                 <td>${cat.artwork_count}</td>
                                                 <td class="table-actions">
-                                                    <button onclick="Pages.showCategoryModal('${cat.id}')" title="Edit">
+                                                    <button data-action="edit-category" data-category-id="${this.escapeAttr(cat.id)}" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
-                                                    <button class="delete" onclick="Pages.deleteCategory('${cat.id}')" title="Delete">
+                                                    <button class="delete" data-action="delete-category" data-category-id="${this.escapeAttr(cat.id)}" title="Delete">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </td>
@@ -610,7 +610,7 @@ const Pages = {
                                             </td>
                                             <td class="table-actions">
                                                 ${user.id !== Auth.user.id ? `
-                                                    <button class="delete" onclick="Pages.deleteUser('${user.id}')" title="Delete">
+                                                    <button class="delete" data-action="delete-user" data-user-id="${this.escapeAttr(user.id)}" title="Delete">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 ` : '<span style="color: var(--text-secondary)">You</span>'}
@@ -669,7 +669,7 @@ const Pages = {
                         <div class="artwork-detail-actions">
                             ${Auth.isLoggedIn() ? `
                                 <button class="btn ${isFavorited ? 'btn-secondary' : 'btn-outline'}" 
-                                        onclick="Pages.toggleFavorite('${artwork.id}', this)">
+                                        data-action="toggle-favorite" data-artwork-id="${this.escapeAttr(artwork.id)}">
                                     <i class="fas fa-heart"></i> ${isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
                                 </button>
                             ` : `
@@ -677,10 +677,9 @@ const Pages = {
                                     <i class="fas fa-heart"></i> Login to Favorite
                                 </a>
                             `}
-                            <a href="#" data-page="gallery" class="btn btn-secondary" 
-                               onclick="App.navigateTo('gallery', {artist: '${artwork.artist_id}'})">
+                            <button class="btn btn-secondary" data-action="navigate-gallery" data-artist="${this.escapeAttr(artwork.artist_id)}">
                                 View More by ${this.escapeHtml(artwork.artist_name)}
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -690,7 +689,7 @@ const Pages = {
                 <div class="empty-state" style="padding: 6rem 1rem;">
                     <i class="fas fa-exclamation-triangle"></i>
                     <h3>Artwork not found</h3>
-                    <p>${error.message}</p>
+                    <p>${this.escapeHtml(error.message)}</p>
                     <a href="#" data-page="gallery" class="btn btn-primary" style="margin-top: 1rem;">Back to Gallery</a>
                 </div>
             `;
@@ -702,9 +701,9 @@ const Pages = {
         return `
             <div class="artwork-card">
                 <div class="artwork-image">
-                    <img src="${artwork.image_url}" alt="${this.escapeHtml(artwork.title)}">
+                    <img src="${this.escapeHtml(artwork.image_url)}" alt="${this.escapeHtml(artwork.title)}">
                     <div class="artwork-overlay">
-                        <button onclick="App.navigateTo('artwork', '${artwork.id}')">View Details</button>
+                        <button data-action="view-artwork" data-artwork-id="${this.escapeAttr(artwork.id)}">View Details</button>
                     </div>
                 </div>
                 <div class="artwork-info">
@@ -714,7 +713,7 @@ const Pages = {
                             <i class="fas fa-user"></i> ${this.escapeHtml(artwork.artist_name)}
                         </span>
                         ${artwork.price ? `
-                            <span class="artwork-price">$${artwork.price.toFixed(2)}</span>
+                            <span class="artwork-price">$${Number(artwork.price).toFixed(2)}</span>
                         ` : ''}
                     </div>
                 </div>
@@ -722,12 +721,28 @@ const Pages = {
         `;
     },
 
-    // Helper: Escape HTML
+    // Helper: Escape HTML - handles all XSS vectors
     escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        if (text === null || text === undefined) return '';
+        if (typeof text !== 'string') text = String(text);
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    // Helper: Escape for use in JavaScript string attributes (onclick, etc.)
+    escapeAttr(text) {
+        if (text === null || text === undefined) return '';
+        if (typeof text !== 'string') text = String(text);
+        // Only allow UUIDs, alphanumeric strings and basic characters for IDs
+        if (!/^[a-zA-Z0-9\-_]+$/.test(text)) {
+            console.warn('Invalid attribute value detected:', text);
+            return '';
+        }
+        return text;
     },
 
     // Show artwork modal (add/edit)

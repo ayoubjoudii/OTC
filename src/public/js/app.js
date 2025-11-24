@@ -21,6 +21,53 @@ const App = {
             }
         });
 
+        // Event delegation for data-action attributes (secure handling of user data)
+        document.addEventListener('click', (e) => {
+            const actionEl = e.target.closest('[data-action]');
+            if (actionEl) {
+                const action = actionEl.dataset.action;
+                
+                switch (action) {
+                    case 'navigate-gallery':
+                        const category = actionEl.dataset.category;
+                        const artist = actionEl.dataset.artist;
+                        const params = {};
+                        if (category) params.category = category;
+                        if (artist) params.artist = artist;
+                        this.navigateTo('gallery', params);
+                        break;
+                    case 'view-artwork':
+                        const artworkId = actionEl.dataset.artworkId;
+                        if (artworkId) this.navigateTo('artwork', artworkId);
+                        break;
+                    case 'toggle-favorite':
+                        const favArtworkId = actionEl.dataset.artworkId;
+                        if (favArtworkId) Pages.toggleFavorite(favArtworkId, actionEl);
+                        break;
+                    case 'edit-artwork':
+                        const editArtworkId = actionEl.dataset.artworkId;
+                        if (editArtworkId) Pages.showArtworkModal(editArtworkId);
+                        break;
+                    case 'delete-artwork':
+                        const deleteArtworkId = actionEl.dataset.artworkId;
+                        if (deleteArtworkId) Pages.deleteArtwork(deleteArtworkId);
+                        break;
+                    case 'edit-category':
+                        const editCategoryId = actionEl.dataset.categoryId;
+                        if (editCategoryId) Pages.showCategoryModal(editCategoryId);
+                        break;
+                    case 'delete-category':
+                        const deleteCategoryId = actionEl.dataset.categoryId;
+                        if (deleteCategoryId) Pages.deleteCategory(deleteCategoryId);
+                        break;
+                    case 'delete-user':
+                        const deleteUserId = actionEl.dataset.userId;
+                        if (deleteUserId) Pages.deleteUser(deleteUserId);
+                        break;
+                }
+            }
+        });
+
         // User menu toggle
         const userMenuBtn = document.getElementById('user-menu-btn');
         const userDropdown = document.getElementById('user-dropdown');
