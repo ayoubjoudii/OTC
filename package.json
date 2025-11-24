@@ -1,0 +1,26 @@
+{
+  "name": "online-art-gallery",
+  "version": "1.0.0",
+  "description": "Online Art Gallery Management System - A full-stack web application for managing and showcasing artworks",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node src/app.js",
+    "test": "node --test src/tests/"
+  },
+  "keywords": ["art", "gallery", "artworks", "management", "nodejs", "express"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "uuid": "^10.0.0"
+  }
+}
