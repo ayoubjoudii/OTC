@@ -8,8 +8,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'artist') {
     exit;
 }
 
+// get artist id for this user
 $stmt = $conn->prepare(
-    'SELECT a.id FROM artists a WHERE a.user_id = ?'
+    'SELECT id FROM artists WHERE user_id = ?'
 );
 $stmt->bind_param('i', $_SESSION['user_id']);
 $stmt->execute();
@@ -39,11 +40,21 @@ $artworks = $stmt->get_result();
 
 <ul>
 <?php while ($row = $artworks->fetch_assoc()): ?>
-  <li>
-    <a href="artwork.php?id=<?php echo $row['id']; ?>">
-      <?php echo htmlspecialchars($row['title']); ?>
+  <li class="artwork-row">
+    <div class="artwork-row-left">
+      <a href="artwork.php?id=<?php echo $row['id']; ?>">
+        <?php echo htmlspecialchars($row['title']); ?>
+      </a>
+      <span class="artwork-status">
+        (<?php echo $row['is_public'] ? 'public' : 'private'; ?>)
+      </span>
+    </div>
+
+    <a class="delete-link"
+       href="delete_artwork.php?id=<?php echo $row['id']; ?>"
+       onclick="return confirm('Delete this artwork permanently?');">
+      Delete
     </a>
-    (<?php echo $row['is_public'] ? 'public' : 'private'; ?>)
   </li>
 <?php endwhile; ?>
 </ul>

@@ -11,26 +11,28 @@ require_once 'config.php';
 </head>
 <body>
 <nav>
-  <a href="index.php">Gallery</a>
-
-  <?php if (isset($_SESSION['user_id'])): ?>
-
-    <?php if (!empty($_SESSION['role']) && $_SESSION['role'] === 'artist'): ?>
-      <!-- Artist nav -->
-      <a href="my_artworks.php">My artworks</a>
-      <a href="upload_artwork.php">Upload</a>
+  <div class="nav-left">
+    <?php if (!isset($_SESSION['user_id'])): ?>
+      <!-- Logged-out: show Register + Login on the left -->
+      <a href="register.php">Register</a>
+      <a href="login.php">Login</a>
     <?php else: ?>
-      <!-- Normal user (can become artist) -->
-      <a href="become_artist.php">Become artist</a>
+      <!-- Logged-in: put Gallery on the left -->
+      <a href="index.php">Gallery</a>
     <?php endif; ?>
+  </div>
 
-    <a href="logout.php">Logout</a>
+  <div class="nav-right">
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <?php if (!empty($_SESSION['role']) && $_SESSION['role'] === 'artist'): ?>
+        <a href="my_artworks.php">My artworks</a>
+        <a href="upload_artwork.php">Upload</a>
+      <?php else: ?>
+        <a href="become_artist.php">Become artist</a>
+      <?php endif; ?>
 
-  <?php else: ?>
-
-    <a href="register.php">Register</a>
-    <a href="login.php">Login</a>
-
-  <?php endif; ?>
+      <a href="logout.php">Logout</a>
+    <?php endif; ?>
+  </div>
 </nav>
 <hr>
