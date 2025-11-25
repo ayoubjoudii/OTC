@@ -1,7 +1,15 @@
 <?php
-require 'db.php';
+require 'db.php'; // includes config.php, which starts the session
+
+// Require login to see the gallery
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
 include 'header.php';
 
+// fetch public artworks
 $sql = "SELECT aw.id, aw.title, aw.image_path, ar.display_name
         FROM artworks aw
         JOIN artists ar ON aw.artist_id = ar.id
@@ -18,8 +26,7 @@ $result = $conn->query($sql);
 <?php while ($row = $result->fetch_assoc()): ?>
   <div class="item">
     <a href="artwork.php?id=<?php echo $row['id']; ?>">
-      <img src="<?php echo htmlspecialchars($row['image_path']); ?>" alt=""
-           style="max-width:200px;">
+      <img src="<?php echo htmlspecialchars($row['image_path']); ?>" alt="">
       <p><?php echo htmlspecialchars($row['title']); ?></p>
       <p>by <?php echo htmlspecialchars($row['display_name']); ?></p>
     </a>

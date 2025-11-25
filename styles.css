@@ -13,11 +13,11 @@ body {
   min-height: 100vh;
 }
 
-/* ---------- Layout ---------- */
+/* ---------- Layout / navigation ---------- */
 
 nav {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between;  /* left group vs right group */
   align-items: center;
   padding: 14px 24px;
   background: rgba(15, 23, 42, 0.9);
@@ -28,15 +28,17 @@ nav {
   backdrop-filter: blur(10px);
 }
 
+.nav-left,
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 nav a {
   color: #e5e7eb;
   text-decoration: none;
-  margin-right: 16px;
   font-size: 0.95rem;
-}
-
-nav a:last-child {
-  margin-right: 0;
 }
 
 nav a:hover {
@@ -288,6 +290,45 @@ ul li a {
 
 ul li a:hover {
   color: #38bdf8;
+}
+
+/* My artworks list: title left, delete right */
+
+.artwork-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;   /* pushes delete link to the right */
+  gap: 12px;
+}
+
+.artwork-row-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.artwork-status {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+/* Delete link styling */
+
+.delete-link {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #ef4444;
+  color: #fecaca;
+  font-size: 0.9rem;
+  text-decoration: none;
+  background: rgba(239, 68, 68, 0.08);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.delete-link:hover {
+  background: #ef4444;   /* red background on hover */
+  color: #ffffff;
+  border-color: #b91c1c;
 }
 
 /* ---------- Footer ---------- */
