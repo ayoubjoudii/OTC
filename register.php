@@ -33,7 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt->bind_param('ss', $email, $hash);
             if ($stmt->execute()) {
-                echo '<p>Registration successful. <a href="login.php">Login</a></p>';
+                // auto‑login: get new user id and set session
+                $new_user_id = $conn->insert_id;   // last inserted id on this connection
+                $_SESSION['user_id'] = $new_user_id;
+                $_SESSION['role'] = 'user';
+
+                // redirect straight to gallery (or wherever you like)
+                header('Location: index.php');
+                exit;
             } else {
                 $errors[] = 'DB error';
             }
