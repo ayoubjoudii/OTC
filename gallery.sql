@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 25, 2025 at 01:12 AM
+-- Generation Time: Nov 27, 2025 at 11:21 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -67,8 +67,8 @@ CREATE TABLE `artworks` (
 --
 
 INSERT INTO `artworks` (`id`, `artist_id`, `title`, `description`, `image_path`, `year`, `medium`, `style`, `is_public`, `created_at`) VALUES
-(1, 1, 'the mona lisa', '3am newl', 'uploads/1764027130_Mona-Lisa-oil-wood-panel-Leonardo-da.webp', 0, '', '', 1, '2025-11-25 00:32:10'),
-(2, 1, 'The Starry Night', 'sahbi van gogh rsamha hethi', 'uploads/1764028132_bg1.jpg', 1889, 'Oil on canvas', '', 1, '2025-11-25 00:48:52');
+(1, 1, 'the mona lisa', '3am newl', 'uploads/1764027130_Mona-Lisa-oil-wood-panel-Leonardo-da.webp', 3000, '', '', 1, '2025-11-25 00:32:10'),
+(3, 1, 'clipy', 'the goat', 'uploads/1764104508_download.jpg', 2025, 'Oil on canvas', 'digital art', 1, '2025-11-25 22:01:48');
 
 -- --------------------------------------------------------
 
@@ -84,6 +84,14 @@ CREATE TABLE `comments` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `comments`
+--
+
+INSERT INTO `comments` (`id`, `user_id`, `artwork_id`, `content`, `created_at`) VALUES
+(1, 1, 3, 'damn crazy', '2025-11-27 22:32:40'),
+(2, 2, 3, 'ahla clippy', '2025-11-27 22:34:06');
+
 -- --------------------------------------------------------
 
 --
@@ -96,6 +104,13 @@ CREATE TABLE `favorites` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `favorites`
+--
+
+INSERT INTO `favorites` (`user_id`, `artwork_id`, `created_at`) VALUES
+(1, 1, '2025-11-27 23:07:52');
+
 -- --------------------------------------------------------
 
 --
@@ -105,6 +120,8 @@ CREATE TABLE `favorites` (
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `role` enum('user','artist','admin') NOT NULL DEFAULT 'user',
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
@@ -114,8 +131,9 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password_hash`, `role`, `created_at`) VALUES
-(1, 'ahmed@gmail.com', '$2y$10$ewQIAn6L.sZK5.qQuwxHwOi8BJq13b3ybcN.CJspzpSlgiaMu2xK2', 'artist', '2025-11-25 00:26:06');
+INSERT INTO `users` (`id`, `email`, `name`, `profile_image`, `password_hash`, `role`, `created_at`) VALUES
+(1, 'ahmed@gmail.com', 'ahmed', NULL, '$2y$10$ewQIAn6L.sZK5.qQuwxHwOi8BJq13b3ybcN.CJspzpSlgiaMu2xK2', 'artist', '2025-11-25 00:26:06'),
+(2, 'samirlwsif@gmail.com', 'samir', 'uploads/1764280007_profile_Cute Cow Wallpaper.jpg', '$2y$10$5HFY0v/Ss59qzXAxRBLhd.kkYKOwQM8vGv7wzT62/tJp2BP1Hgxia', 'user', '2025-11-27 22:33:40');
 
 --
 -- Indexes for dumped tables
@@ -171,19 +189,19 @@ ALTER TABLE `artists`
 -- AUTO_INCREMENT for table `artworks`
 --
 ALTER TABLE `artworks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
