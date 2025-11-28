@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'artist') {
 
 $artwork_id = intval($_GET['id'] ?? 0);
 if ($artwork_id <= 0) {
-    header('Location: my_artworks.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -22,7 +22,7 @@ $artist = $res->fetch_assoc();
 $stmt->close();
 
 if (!$artist) {
-    header('Location: my_artworks.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
         $stmt->close();
 
-        header('Location: my_artworks.php');
+        header('Location: profile.php');
         exit;
     }
 }
