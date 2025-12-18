@@ -152,10 +152,12 @@ p {
   text-decoration: none;
 }
 
-/* Use natural image ratio: width 100%, height auto */
+/* Fixed height for consistent sizing */
 .item img {
   width: 100%;
-  height: auto;
+  height: 280px;
+  object-fit: cover;
+  object-position: center;
   display: block;
   background: #020617;
   border-bottom: 1px solid #1f2937;

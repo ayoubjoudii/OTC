@@ -45,6 +45,18 @@ if (!$art) {
     exit;
 }
 
+// Delete related comments first (foreign key constraint)
+$stmt = $conn->prepare('DELETE FROM comments WHERE artwork_id = ?');
+$stmt->bind_param('i', $artwork_id);
+$stmt->execute();
+$stmt->close();
+
+// Delete related favorites
+$stmt = $conn->prepare('DELETE FROM favorites WHERE artwork_id = ?');
+$stmt->bind_param('i', $artwork_id);
+$stmt->execute();
+$stmt->close();
+
 // Delete artwork row
 $stmt = $conn->prepare('DELETE FROM artworks WHERE id = ? AND artist_id = ?');
 $stmt->bind_param('ii', $artwork_id, $artist_id);

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 27, 2025 at 11:21 PM
+-- Generation Time: Dec 18, 2025 at 03:09 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -67,8 +67,10 @@ CREATE TABLE `artworks` (
 --
 
 INSERT INTO `artworks` (`id`, `artist_id`, `title`, `description`, `image_path`, `year`, `medium`, `style`, `is_public`, `created_at`) VALUES
-(1, 1, 'the mona lisa', '3am newl', 'uploads/1764027130_Mona-Lisa-oil-wood-panel-Leonardo-da.webp', 3000, '', '', 1, '2025-11-25 00:32:10'),
-(3, 1, 'clipy', 'the goat', 'uploads/1764104508_download.jpg', 2025, 'Oil on canvas', 'digital art', 1, '2025-11-25 22:01:48');
+(1, 1, 'The Mona Lisa', 'The Mona Lisa is a 16th-century portrait painted by the Italian artist Leonardo da Vinci. The painting, also known as La Gioconda, depicts a seated woman, believed to be Lisa Gherardini, the wife of a Florentine merchant.', 'uploads/1764027130_Mona-Lisa-oil-wood-panel-Leonardo-da.webp', 1503, 'Oil on poplar panel', '', 1, '2025-11-25 00:32:10'),
+(4, 1, 'Girl with a Pearl Earring', 'Girl with a Pearl Earring is a 17th-century painting created by the Dutch artist Johannes Vermeer. The painting depicts a young woman wearing a headscarf and a large pearl earring, looking over her shoulder at the viewer. The painting is famous for its use of light and shadow, and the enigmatic expression of the sitter.', 'uploads/1766063827_1665_Girl_with_a_Pearl_Earring.jpg', 1665, 'Oil on canvas', 'Tronie', 1, '2025-12-18 14:17:07'),
+(5, 1, 'The Last Supper', 'The Last Supper is a 15th-century mural painting created by the Italian artist Leonardo da Vinci. The painting depicts the scene of the Last Supper, where Jesus Christ shares his final meal with his apostles before his crucifixion.', 'uploads/1766064924_The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg', 1498, 'Tempera on gesso', '', 1, '2025-12-18 14:35:24'),
+(6, 1, 'Guernica', 'Guernica is a large-scale mural painting created by the Spanish artist Pablo Picasso in 1937. The painting depicts the horrors of war and the suffering of innocent civilians, specifically inspired by the bombing of the Spanish town of Guernica during the Spanish Civil War.', 'uploads/1766065359_PicassoGuernica.jpg', 1937, 'Oil on canvas', 'Cubism', 1, '2025-12-18 14:42:39');
 
 -- --------------------------------------------------------
 
@@ -83,14 +85,6 @@ CREATE TABLE `comments` (
   `content` text NOT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `comments`
---
-
-INSERT INTO `comments` (`id`, `user_id`, `artwork_id`, `content`, `created_at`) VALUES
-(1, 1, 3, 'damn crazy', '2025-11-27 22:32:40'),
-(2, 2, 3, 'ahla clippy', '2025-11-27 22:34:06');
 
 -- --------------------------------------------------------
 
@@ -120,7 +114,7 @@ INSERT INTO `favorites` (`user_id`, `artwork_id`, `created_at`) VALUES
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
-  `name` varchar(100) NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
   `profile_image` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `role` enum('user','artist','admin') NOT NULL DEFAULT 'user',
@@ -189,7 +183,7 @@ ALTER TABLE `artists`
 -- AUTO_INCREMENT for table `artworks`
 --
 ALTER TABLE `artworks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `comments`
