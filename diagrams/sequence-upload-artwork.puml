@@ -1,0 +1,92 @@
+@startuml Séquence Upload Œuvre d'Art
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+
+title Diagramme de Séquence - Upload d'une Œuvre d'Art
+
+actor Artiste as artist
+participant "upload_artwork.php" as page
+participant "db.php" as db_conn
+database "MySQL\ngallery" as db
+participant "File System\nuploads/" as fs
+
+artist -> page : Accède à upload_artwork.php
+activate page
+
+page -> page : Vérifie $_SESSION['user_id']\net $_SESSION['role'] === 'artist'
+
+alt Non authentifié ou non artiste
+    page --> artist : "You must be logged in as an artist"
+else Artiste authentifié
+    page -> db_conn : require db.php
+    activate db_conn
+    db_conn -> db : Connexion MySQL
+    db --> db_conn : $conn
+    deactivate db_conn
+    
+    page -> db : SELECT id FROM artists\nWHERE user_id = ?
+    activate db
+    
+    alt Pas de profil artiste
+        db --> page : 0 rows
+        page --> artist : "No artist profile found"
+    else Profil artiste trouvé
+        db --> page : artist_id
+        deactivate db
+        
+        page --> artist : Affiche formulaire upload
+        
+        artist -> page : Remplit formulaire\n(title, description, year, medium, style)
+        artist -> page : Sélectionne image
+        artist -> page : Coche "Public"
+        artist -> page : Clique "Upload"
+        
+        page -> page : $_POST validation\n(title requis, file requis)
+    
+        
+        alt Validation échoue
+            page --> artist : "Title and image are required"
+        else Validation réussie
+            page -> fs : move_uploaded_file(\n$_FILES['image']['tmp_name'],\n'uploads/timestamp_filename')
+            activate fs
+            
+            alt Upload fichier échoue
+                fs --> page : false
+                page --> artist : "Failed to move uploaded file"
+            else Upload réussi
+                fs --> page : true (chemin: uploads/...)
+                deactivate fs
+                
+                page -> db : INSERT INTO artworks\n(artist_id, title, description,\nimage_path, year, medium,\nstyle, is_public)\nVALUES (?,?,?,?,?,?,?,?)
+                activate db
+                
+                alt Erreur DB
+                    db --> page : Error
+                    page --> artist : "DB error"
+                else Insertion réussie
+                    db --> page : Artwork créé
+                    deactivate db
+                    
+                    page --> artist : "Artwork uploaded"
+                    deactivate page
+                    
+                    artist -> page : Reste sur la page\nou redirige vers profile.php
+                end
+            end
+        end
+    end
+end
+
+note right of fs
+    Upload configuration:
+    - Formats acceptés: image/*
+    - Nom fichier: timestamp_originalname
+    - Destination: uploads/
+    - Validation PHP côté serveur
+end note
+
+@enduml

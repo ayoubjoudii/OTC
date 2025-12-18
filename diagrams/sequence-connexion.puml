@@ -9,38 +9,35 @@ skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
 title Diagramme de Séquence - Connexion Utilisateur
 
 actor Utilisateur as user
-participant "Page\nLogin" as page
-participant "API\nBackend" as api
-participant "Controller\nAuth" as controller
-participant "Middleware\nAuth" as auth
-database "MongoDB" as db
+participant "login.php" as page
+participant "db.php" as db_conn
+database "MySQL\ngallery" as db
 
-user -> page : Accède à /login
+user -> page : Accède à login.php
 activate page
 page --> user : Affiche formulaire connexion
 
 user -> page : Saisit email et password
 user -> page : Clique "Se connecter"
 
-page -> api : POST /api/auth/login\n{email, password}
-activate api
+page -> page : $_POST validation
+page -> db_conn : require db.php
+activate db_conn
+db_conn -> db : Connexion MySQL
+db --> db_conn : $conn
+deactivate db_conn
 
-api -> controller : login(req, res)
-activate controller
-
-controller -> db : Recherche utilisateur\npar email
+page -> db : SELECT id, password_hash, role\nFROM users WHERE email = ?
 activate db
 
 alt Utilisateur non trouvé
-    db --> controller : Null
-    controller --> api : 401 Unauthorized
-    api --> page : Identifiants invalides
-    page --> user : "Email ou mot de passe incorrect"
+    db --> page : 0 rows
+    page --> user : "Invalid email or password"
 else Utilisateur trouvé
-    db --> controller : Utilisateur
+    db --> page : user data
     deactivate db
     
-    controller -> controller : Compare password\navec bcrypt
+    page -> page : password_verify()
     
     alt Mot de passe incorrect
         controller --> api : 401 Unauthorized
@@ -51,22 +48,23 @@ else Utilisateur trouvé
         
         controller --> api : 200 OK\n{token, user: {id, username, email, role}}
         deactivate controller
-        
-        api --> page : {token, user}
-        deactivate api
-        
-        page -> page : Stocke token dans localStorage
-        page -> page : Stocke user dans localStorage
+    
+    alt Mot de passe incorrect
+        page --> user : "Invalid email or password"
+    else Mot de passe correct
+        page -> page : $_SESSION['user_id'] = user_id
+        page -> page : $_SESSION['role'] = role
         
         page --> user : Connexion réussie
+        page -> page : header('Location: index.php')
         deactivate page
         
-        user -> page : Redirigé vers /gallery
+        user -> page : Redirigé vers index.php (Gallery)
         
         note right of page
-            Token JWT utilisé pour
-            toutes les requêtes authentifiées
-            via header: Authorization: Bearer <token>
+            Session PHP utilisée pour
+            l'authentification. Les variables
+            $_SESSION persistent entre les pages
         end note
     end
 end

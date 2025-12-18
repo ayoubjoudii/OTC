@@ -1,0 +1,80 @@
+@startuml Séquence Consultation Galerie
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+
+title Diagramme de Séquence - Consultation de la Galerie
+
+actor Visiteur as visitor
+participant "index.php" as page
+participant "db.php" as db_conn
+database "MySQL\ngallery" as db
+
+visitor -> page : Accède à index.php
+activate page
+
+page -> page : Vérifie $_SESSION['user_id']
+alt Non connecté
+    page --> visitor : header('Location: login.php')
+else Connecté
+    page -> db_conn : require db.php
+    activate db_conn
+    db_conn -> db : Connexion MySQL
+    db --> db_conn : $conn
+    deactivate db_conn
+
+    page -> db : SELECT aw.*, ar.display_name\nFROM artworks aw\nJOIN artists ar\nWHERE aw.is_public = 1\nORDER BY created_at DESC
+    activate db
+
+    alt Aucune œuvre trouvée
+        db --> page : 0 rows
+        page --> visitor : "Aucune œuvre disponible"
+    else Œuvres trouvées
+        db --> page : [artworks...]
+        deactivate db
+        
+        page -> page : Génère HTML grille\navec foreach loop
+        page --> visitor : Affiche galerie d'œuvres
+    page --> visitor : Galerie affichée
+    
+    alt Visiteur clique sur une œuvre
+        visitor -> page : Clique sur œuvre
+        page -> api : GET /api/artworks/{id}
+        activate api
+        
+        api -> controller : getArtworkById(req, res)
+        activate controller
+        
+        visitor -> page : Clique sur une œuvre
+        
+        page -> page : Redirige vers artwork.php?id={id}
+        activate page
+        
+        page -> db : SELECT aw.*, ar.*\nFROM artworks aw\nJOIN artists ar\nWHERE aw.id = ?\nAND aw.is_public = 1
+        activate db
+        
+        alt Œuvre non trouvée
+            db --> page : 0 rows
+            page --> visitor : "Artwork not found"
+        else Œuvre trouvée
+            db --> page : artwork data
+            deactivate db
+            
+            page -> page : Génère page détails\navec include header/footer
+            page --> visitor : Détails de l'œuvre
+        end
+    end
+end
+
+deactivate page
+
+note right of page
+    La galerie affiche uniquement
+    les œuvres publiques (is_public = 1)
+    avec pagination LIMIT 100
+end note
+
+@enduml

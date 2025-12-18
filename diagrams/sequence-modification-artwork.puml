@@ -1,0 +1,84 @@
+@startuml Séquence Modification Œuvre
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+
+title Diagramme de Séquence - Modification d'une Œuvre
+
+actor Artiste as artist
+participant "edit_artwork.php" as page
+participant "db.php" as db_conn
+database "MySQL\ngallery" as db
+participant "File System\nuploads/" as fs
+
+artist -> page : Accède à edit_artwork.php?id={id}
+activate page
+
+page -> page : Vérifie $_SESSION['user_id']\net $_SESSION['role'] === 'artist'
+
+alt Non authentifié ou non artiste
+    page --> artist : header('Location: login.php')
+else Artiste authentifié
+    page -> db_conn : require db.php
+    activate db_conn
+    db_conn -> db : Connexion MySQL
+    db --> db_conn : $conn
+    deactivate db_conn
+    
+    page -> db : SELECT id FROM artists\nWHERE user_id = ?
+    activate db
+    db --> page : artist_id
+    deactivate db
+    
+    page -> db : SELECT * FROM artworks\nWHERE id = ?\nAND artist_id = ?
+    activate db
+    
+    alt Artwork non trouvé ou non propriétaire
+        db --> page : 0 rows
+        page --> artist : header('Location: profile.php')
+    else Artwork trouvé
+        db --> page : artwork data
+        deactivate db
+        
+        page -> page : Pré-remplit formulaire\navec données existantes
+        page --> artist : Affiche formulaire édition
+        
+        artist -> page : Modifie champs\n(title, description, year, etc.)        artist -> page : [Optionnel] Change image
+        artist -> page : Clique "Update"
+        
+        page -> page : $_POST validation\n(title requis)
+        
+        alt Validation échoue
+            page --> artist : Affiche erreurs
+        else Validation réussie
+            page -> db : UPDATE artworks SET\ntitle=?, description=?,\nyear=?, medium=?, style=?,\nis_public=?\nWHERE id=? AND artist_id=?
+            activate db
+            
+            alt Erreur DB
+                db --> page : Error
+                page --> artist : "DB error"
+            else Update réussi
+                db --> page : Artwork mis à jour
+                deactivate db
+                
+                page --> artist : "Artwork updated"
+                page -> page : header('Location: profile.php')
+                deactivate page
+                
+                artist -> page : Redirigé vers profile.php
+            end
+        end
+    end
+end
+
+note right of page
+    L'édition ne permet pas de changer
+    l'image dans cette version.
+    Pour changer l'image, il faut
+    supprimer et re-uploader l'œuvre.
+end note
+
+@enduml
