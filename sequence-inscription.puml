@@ -1,0 +1,79 @@
+@startuml Séquence Inscription Utilisateur
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+skinparam sequenceLifeLineBackgroundColor #FFFFFF
+
+title Diagramme de Séquence - Inscription Utilisateur
+
+actor Utilisateur as user
+participant "Page\nRegister" as page
+participant "API\nBackend" as api
+participant "Controller\nAuth" as controller
+participant "Validator" as validator
+database "MongoDB" as db
+
+user -> page : Accède à /register
+activate page
+page --> user : Affiche formulaire inscription
+
+user -> page : Remplit formulaire\n(username, email, password)
+user -> page : Clique "S'inscrire"
+
+page -> page : Validation côté client
+alt Validation échoue
+    page --> user : Affiche erreurs formulaire
+else Validation réussie
+    page -> api : POST /api/auth/register\n{username, email, password}
+    activate api
+    
+    api -> validator : Valide données
+    activate validator
+    
+    alt Données invalides
+        validator --> api : Erreurs validation
+        api --> page : 400 Bad Request\n{errors: [...]}
+        page --> user : Affiche erreurs
+    else Données valides
+        validator --> api : OK
+        deactivate validator
+        
+        api -> controller : register(req, res)
+        activate controller
+        
+        controller -> db : Vérifie si email existe
+        activate db
+        
+        alt Email déjà utilisé
+            db --> controller : Utilisateur trouvé
+            controller --> api : Erreur "Email déjà utilisé"
+            api --> page : 409 Conflict
+            page --> user : "Email déjà utilisé"
+        else Email disponible
+            db --> controller : Aucun utilisateur
+            
+            controller -> controller : Hash password (bcrypt)
+            controller -> db : Créer utilisateur
+            db --> controller : Utilisateur créé
+            deactivate db
+            
+            controller -> controller : Générer JWT token
+            controller --> api : 201 Created\n{token, user}
+            deactivate controller
+            
+            api --> page : {token, user}
+            deactivate api
+            
+            page -> page : Stocke token (localStorage)
+            page --> user : Succès - Redirection
+            deactivate page
+            
+            user -> page : Redirigé vers /gallery
+        end
+    end
+end
+
+@enduml

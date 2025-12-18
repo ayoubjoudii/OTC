@@ -1,0 +1,50 @@
+@startuml Diagramme des Acteurs - Galerie OTC
+
+!define ACTOR_COLOR #FF6B6B
+!define SYSTEM_COLOR #4ECDC4
+
+skinparam actorStyle awesome
+skinparam backgroundColor #FAFAFA
+skinparam actorBackgroundColor ACTOR_COLOR
+skinparam packageBackgroundColor SYSTEM_COLOR
+
+title Diagramme des Acteurs - Galerie d'Art OTC
+
+actor "Visiteur" as visitor <<Non authentifié>>
+actor "Utilisateur\nAuthentifié" as user <<Authentifié>>
+actor "Artiste" as artist <<Créateur>>
+actor "Administrateur" as admin <<Admin>>
+
+package "Système Galerie OTC" {
+    usecase "Galerie d'Art\nOTC" as system
+}
+
+visitor -up-> system : Consulte
+user -up-> system : Interagit
+artist -up-> system : Crée & Gère
+admin -up-> system : Administre
+
+note right of visitor
+  Peut consulter la galerie
+  sans authentification
+end note
+
+note right of user
+  Accès aux fonctionnalités
+  de base après connexion
+end note
+
+note right of artist
+  Peut uploader et gérer
+  ses propres œuvres
+end note
+
+note right of admin
+  Gestion complète du système
+  et modération
+end note
+
+user <|-- artist : hérite
+user <|-- admin : hérite
+
+@enduml

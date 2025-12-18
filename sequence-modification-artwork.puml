@@ -1,0 +1,138 @@
+@startuml Séquence Modification Œuvre
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+
+title Diagramme de Séquence - Modification d'une Œuvre
+
+actor Artiste as artist
+participant "Page\nEdit Artwork" as page
+participant "API\nBackend" as api
+participant "Middleware\nAuth" as auth
+participant "Multer" as multer
+participant "Controller\nArtwork" as controller
+database "MongoDB" as db
+participant "File System" as fs
+
+artist -> page : Accède à /edit-artwork/{id}
+activate page
+
+page -> api : GET /api/artworks/{id}\n+ JWT token
+activate api
+
+api -> auth : Vérifie JWT token
+activate auth
+auth --> api : User authentifié
+deactivate auth
+
+api -> controller : getArtworkById(req, res)
+activate controller
+
+controller -> db : findById(id)
+activate db
+db --> controller : artwork
+deactivate db
+
+controller --> api : 200 OK {artwork}
+deactivate controller
+
+api --> page : {artwork}
+deactivate api
+
+page -> page : Pré-remplit formulaire\navec données existantes
+page --> artist : Affiche formulaire édition
+
+artist -> page : Modifie champs\n(title, description, etc.)
+artist -> page : [Optionnel] Change image
+
+artist -> page : Clique "Sauvegarder"
+
+page -> api : PUT /api/artworks/{id}\n(multipart/form-data)\n+ JWT token
+activate api
+
+api -> auth : Vérifie JWT token
+activate auth
+auth --> api : User authentifié {userId}
+deactivate auth
+
+alt Nouvelle image uploadée
+    api -> multer : Upload nouvelle image
+    activate multer
+    
+    alt Fichier invalide
+        multer --> api : Erreur validation
+        api --> page : 400 Bad Request
+        page --> artist : "Format/taille invalide"
+    else Fichier valide
+        multer -> fs : Sauvegarde nouvelle image
+        activate fs
+        fs --> multer : Nouveau chemin
+        deactivate fs
+        multer --> api : {filename, path}
+        deactivate multer
+    end
+end
+
+api -> controller : updateArtwork(req, res)
+activate controller
+
+controller -> db : findById(id)
+activate db
+
+alt Œuvre non trouvée
+    db --> controller : null
+    controller --> api : 404 Not Found
+    api --> page : Œuvre introuvable
+    page --> artist : "Œuvre non trouvée"
+else Œuvre trouvée
+    db --> controller : artwork {owner, imageUrl}
+    
+    controller -> controller : Vérifie ownership\n(artwork.owner === userId)
+    
+    alt Non autorisé
+        alt Nouvelle image uploadée
+            controller -> fs : Supprime nouvelle image\n(rollback)
+        end
+        controller --> api : 403 Forbidden
+        api --> page : Non autorisé
+        page --> artist : "Vous n'êtes pas autorisé"
+    else Autorisé
+        controller -> controller : Prépare données update\n{title, artist, year,\ndescription, category}
+        
+        alt Nouvelle image fournie
+            controller -> controller : Ajoute imageUrl\naux données update
+            controller -> fs : Supprime ancienne image
+            activate fs
+            fs --> controller : Ancienne image supprimée
+            deactivate fs
+        end
+        
+        controller -> db : findByIdAndUpdate(id,\nupdatedData, {new: true})
+        db --> controller : Artwork mis à jour
+        deactivate db
+        
+        controller --> api : 200 OK\n{artwork: updated}
+        deactivate controller
+        
+        api --> page : {artwork}
+        deactivate api
+        
+        page --> artist : "Œuvre modifiée avec succès"
+        deactivate page
+        
+        artist -> page : Redirigé vers\n/my-artworks ou /gallery
+    end
+end
+
+note right of controller
+    Gestion transactionnelle:
+    - Rollback image si échec
+    - Suppression ancienne image
+      seulement si succès
+    - Validation ownership
+end note
+
+@enduml

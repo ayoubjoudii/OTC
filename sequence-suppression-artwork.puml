@@ -1,0 +1,124 @@
+@startuml Séquence Suppression Œuvre
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+
+title Diagramme de Séquence - Suppression d'une Œuvre
+
+actor Artiste as artist
+participant "Page\nMy Artworks" as page
+participant "API\nBackend" as api
+participant "Middleware\nAuth" as auth
+participant "Controller\nArtwork" as controller
+database "MongoDB" as db
+participant "File System" as fs
+
+artist -> page : Accède à /my-artworks
+activate page
+
+page -> api : GET /api/artworks/user/{userId}\n+ JWT token
+activate api
+
+api -> auth : Vérifie JWT token
+activate auth
+auth --> api : User authentifié
+deactivate auth
+
+api -> controller : getUserArtworks(req, res)
+activate controller
+
+controller -> db : find({owner: userId})
+activate db
+db --> controller : [artworks...]
+deactivate db
+
+controller --> api : 200 OK {artworks}
+deactivate controller
+api --> page : {artworks}
+deactivate api
+
+page --> artist : Affiche liste des œuvres
+
+artist -> page : Clique "Supprimer"\nsur une œuvre
+page -> page : Affiche confirmation\n"Voulez-vous vraiment\nsupprimer cette œuvre ?"
+
+artist -> page : Confirme suppression
+
+page -> api : DELETE /api/artworks/{artworkId}\n+ JWT token
+activate api
+
+api -> auth : Vérifie JWT token
+activate auth
+
+alt Token invalide/absent
+    auth --> api : 401 Unauthorized
+    api --> page : Non authentifié
+    page --> artist : Erreur: "Non authentifié"
+else Token valide
+    auth --> api : User authentifié {userId}
+    deactivate auth
+    
+    api -> controller : deleteArtwork(req, res)
+    activate controller
+    
+    controller -> db : findById(artworkId)
+    activate db
+    
+    alt Œuvre non trouvée
+        db --> controller : null
+        controller --> api : 404 Not Found
+        api --> page : Œuvre introuvable
+        page --> artist : "Œuvre non trouvée"
+    else Œuvre trouvée
+        db --> controller : artwork {owner, imageUrl}
+        
+        controller -> controller : Vérifie ownership\n(artwork.owner === userId\nOU user.role === 'admin')
+        
+        alt Non autorisé
+            controller --> api : 403 Forbidden
+            api --> page : Non autorisé
+            page --> artist : "Vous n'êtes pas autorisé"
+        else Autorisé
+            controller -> db : deleteOne({_id: artworkId})
+            db --> controller : Supprimé
+            deactivate db
+            
+            controller -> fs : Supprime fichier image\n(unlink imageUrl)
+            activate fs
+            
+            alt Erreur suppression fichier
+                fs --> controller : Erreur (fichier non trouvé)
+                note right
+                    Continue quand même,
+                    l'œuvre est supprimée de DB
+                end note
+            else Fichier supprimé
+                fs --> controller : Succès
+            end
+            deactivate fs
+            
+            controller --> api : 200 OK\n{message: "Œuvre supprimée"}
+            deactivate controller
+            
+            api --> page : Succès
+            deactivate api
+            
+            page -> page : Retire l'œuvre\nde l'affichage
+            page --> artist : "Œuvre supprimée avec succès"
+            deactivate page
+        end
+    end
+end
+
+note right of controller
+    Sécurité:
+    - Vérification du propriétaire
+    - Ou autorisation admin
+    - Suppression cascade
+      (DB + fichier)
+end note
+
+@enduml

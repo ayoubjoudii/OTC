@@ -1,0 +1,111 @@
+@startuml Diagramme de Cas d'Utilisation - Galerie OTC
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam actorStyle awesome
+skinparam backgroundColor #FAFAFA
+skinparam usecaseBackgroundColor PRIMARY_COLOR
+skinparam packageBackgroundColor #E8F4F8
+
+title Diagramme de Cas d'Utilisation - Galerie d'Art OTC
+
+left to right direction
+
+actor "Visiteur" as visitor
+actor "Utilisateur" as user
+actor "Artiste" as artist
+actor "Admin" as admin
+
+rectangle "Système Galerie OTC" {
+    
+    package "Gestion Authentification" #LightYellow {
+        usecase "S'inscrire" as UC1
+        usecase "Se connecter" as UC2
+        usecase "Se déconnecter" as UC3
+        usecase "Gérer profil" as UC4
+    }
+    
+    package "Consultation Galerie" #LightBlue {
+        usecase "Consulter galerie" as UC5
+        usecase "Voir détails œuvre" as UC6
+        usecase "Filtrer par catégorie" as UC7
+        usecase "Rechercher œuvre" as UC8
+    }
+    
+    package "Gestion des Œuvres" #LightGreen {
+        usecase "Uploader œuvre" as UC9
+        usecase "Modifier œuvre" as UC10
+        usecase "Supprimer œuvre" as UC11
+        usecase "Gérer mes œuvres" as UC12
+    }
+    
+    package "Interactions" #LightPink {
+        usecase "Ajouter aux favoris" as UC13
+        usecase "Partager œuvre" as UC14
+    }
+    
+    package "Administration" #LightCoral {
+        usecase "Gérer catégories" as UC15
+        usecase "Modérer œuvres" as UC16
+        usecase "Gérer utilisateurs" as UC17
+    }
+}
+
+' Relations Visiteur
+visitor --> UC5
+visitor --> UC6
+visitor --> UC7
+visitor --> UC8
+visitor --> UC1
+visitor --> UC2
+
+' Relations Utilisateur
+user --> UC3
+user --> UC4
+user --> UC13
+user --> UC14
+
+' Relations Artiste
+artist --> UC9
+artist --> UC10
+artist --> UC11
+artist --> UC12
+
+' Relations Admin
+admin --> UC15
+admin --> UC16
+admin --> UC17
+
+' Héritage
+user <|-- artist
+user <|-- admin
+
+' Extensions et Inclusions
+UC9 ..> UC2 : <<require>>
+UC10 ..> UC2 : <<require>>
+UC11 ..> UC2 : <<require>>
+UC12 ..> UC2 : <<require>>
+UC4 ..> UC2 : <<require>>
+UC13 ..> UC2 : <<require>>
+
+UC9 ..> UC5 : <<extend>>
+UC10 ..> UC6 : <<extend>>
+
+note right of UC9
+  Upload avec validation
+  des formats d'images
+  (JPG, PNG, WebP)
+end note
+
+note bottom of UC15
+  Création et gestion
+  des catégories artistiques
+end note
+
+note right of UC2
+  Authentification via
+  JWT tokens
+end note
+
+@enduml

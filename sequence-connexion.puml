@@ -1,0 +1,74 @@
+@startuml Séquence Connexion Utilisateur
+
+!define PRIMARY_COLOR #4ECDC4
+!define SECONDARY_COLOR #FF6B6B
+
+skinparam backgroundColor #FAFAFA
+skinparam sequenceParticipantBackgroundColor PRIMARY_COLOR
+
+title Diagramme de Séquence - Connexion Utilisateur
+
+actor Utilisateur as user
+participant "Page\nLogin" as page
+participant "API\nBackend" as api
+participant "Controller\nAuth" as controller
+participant "Middleware\nAuth" as auth
+database "MongoDB" as db
+
+user -> page : Accède à /login
+activate page
+page --> user : Affiche formulaire connexion
+
+user -> page : Saisit email et password
+user -> page : Clique "Se connecter"
+
+page -> api : POST /api/auth/login\n{email, password}
+activate api
+
+api -> controller : login(req, res)
+activate controller
+
+controller -> db : Recherche utilisateur\npar email
+activate db
+
+alt Utilisateur non trouvé
+    db --> controller : Null
+    controller --> api : 401 Unauthorized
+    api --> page : Identifiants invalides
+    page --> user : "Email ou mot de passe incorrect"
+else Utilisateur trouvé
+    db --> controller : Utilisateur
+    deactivate db
+    
+    controller -> controller : Compare password\navec bcrypt
+    
+    alt Mot de passe incorrect
+        controller --> api : 401 Unauthorized
+        api --> page : Identifiants invalides
+        page --> user : "Email ou mot de passe incorrect"
+    else Mot de passe correct
+        controller -> controller : Génère JWT token\n{userId, email, role}
+        
+        controller --> api : 200 OK\n{token, user: {id, username, email, role}}
+        deactivate controller
+        
+        api --> page : {token, user}
+        deactivate api
+        
+        page -> page : Stocke token dans localStorage
+        page -> page : Stocke user dans localStorage
+        
+        page --> user : Connexion réussie
+        deactivate page
+        
+        user -> page : Redirigé vers /gallery
+        
+        note right of page
+            Token JWT utilisé pour
+            toutes les requêtes authentifiées
+            via header: Authorization: Bearer <token>
+        end note
+    end
+end
+
+@enduml
