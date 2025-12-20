@@ -6,17 +6,35 @@ $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
+    $name = trim($_POST['name'] ?? '');
     $password = $_POST['password'] ?? '';
     $password2 = $_POST['password2'] ?? '';
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Invalid email';
     }
+    if (empty($name)) {
+        $errors[] = 'Name is required';
+    }
     if (strlen($password) < 6) {
         $errors[] = 'Password must be at least 6 characters';
     }
     if ($password !== $password2) {
         $errors[] = 'Passwords do not match';
+    }
+
+    // Handle profile image upload
+    $profile_image = null;
+    if (!empty($_FILES['profile_image']['name'])) {
+        $upload_dir = 'uploads/';
+        $filename = time() . '_profile_' . basename($_FILES['profile_image']['name']);
+        $target = $upload_dir . $filename;
+
+        if (!move_uploaded_file($_FILES['profile_image']['tmp_name'], $target)) {
+            $errors[] = 'Failed to upload profile image';
+        } else {
+            $profile_image = $target;
+        }
     }
 
     if (!$errors) {
@@ -29,16 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $conn->prepare(
-                'INSERT INTO users (email, password_hash) VALUES (?, ?)'
+                'INSERT INTO users (email, name, profile_image, password_hash) VALUES (?, ?, ?, ?)'
             );
-            $stmt->bind_param('ss', $email, $hash);
+            $stmt->bind_param('ssss', $email, $name, $profile_image, $hash);
             if ($stmt->execute()) {
                 // auto‑login: get new user id and set session
-                $new_user_id = $conn->insert_id;   // last inserted id on this connection
+                $new_user_id = $conn->insert_id;
                 $_SESSION['user_id'] = $new_user_id;
                 $_SESSION['role'] = 'user';
 
-                // redirect straight to gallery (or wherever you like)
+                // redirect straight to gallery
                 header('Location: index.php');
                 exit;
             } else {
@@ -52,17 +70,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php foreach ($errors as $e) echo '<p style="color:red">'.htmlspecialchars($e).'</p>'; ?>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <legend style="
     padding: 3px 6px;
     text-align: center;
-    font-size: 40px;
+    font-size: 50px;
     color: #1b0043;
     font-family:serif;
     margin:auto;
     ;">Register</legend>
+  <label>Name</label>
+  <input type="text" name="name" required>
+  <br>
   <label>Email</label>
   <input type="email" name="email" required>
+  <br>
+  <label>Profile Image (optional)</label>
+  <input type="file" name="profile_image" accept="image/*">
   <br>
   <label>Password</label>
   <input type="password" name="password" required>
